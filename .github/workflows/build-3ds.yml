@@ -1,0 +1,52 @@
+name: Build Brewtendo 3DS CIA
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    container:
+      image: devkitpro/devkitarm:latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install 3DS dependencies
+        run: |
+          pacman -Sy --noconfirm 3ds-dev
+
+      - name: Build ELF and 3DSX
+        run: |
+          make
+
+      - name: Build SMDH and banner
+        run: |
+          bannertool makesmdh \
+            -s "Brewtendo Network" \
+            -l "eShop Replacement Servers" \
+            -p "AllisterMKW" \
+            -i gfx/icon.png \
+            -o icon.smdh
+
+          bannertool makebanner \
+            -i gfx/banner.png \
+            -o banner.bnr
+
+      - name: Build CIA
+        run: |
+          makerom \
+            -f cia \
+            -o Brewtendo.cia \
+            -elf brewtendo.elf \
+            -icon icon.smdh \
+            -banner banner.bnr
+
+      - name: Upload CIA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Brewtendo-CIA
+          path: Brewtendo.cia
