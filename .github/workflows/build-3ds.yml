@@ -1,0 +1,30 @@
+name: Build 3DS CIA
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    container:
+      image: devkitpro/devkitarm:latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bannertool makerom
+          make
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Brewtendo-3DS
+          path: |
+            *.cia
+            *.3dsx
