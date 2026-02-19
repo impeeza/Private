@@ -21,7 +21,7 @@ jobs:
         run: |
           dkp-pacman -S --noconfirm 3dstools
 
-      - name: Build
+      - name: Build CIA
         run: |
           make clean
           make
