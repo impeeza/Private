@@ -9,14 +9,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install devkitPro
+        uses: devkitPro/setup-devkitpro@v1
+        with:
+          toolchain: devkitARM
+          platforms: 3ds
+
+      - name: Install 3DS tools
         run: |
-          sudo apt-get update
-          sudo apt-get install -y wget gnupg
-          wget https://apt.devkitpro.org/install-devkitpro-pacman
-          chmod +x install-devkitpro-pacman
-          sudo ./install-devkitpro-pacman
-          sudo dkp-pacman -
+          dkp-pacman -S --noconfirm 3dstools
+
+      - name: Build
+        run: |
+          make clean
+          make
+
+      - name: Upload CIA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Brewtendo-CIA
+          path: "*.cia"
