@@ -6,28 +6,40 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-
+    runs-on: ubuntu-latest		#The process should run on Ubuntu
+    container:
+      image: devkitpro/devkitarm	#Using the DevKitPro DevKitARM container
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install devkitPro
-        uses: devkitPro/setup-devkitpro@v1
-        with:
-          toolchain: devkitARM
-          platforms: 3ds
-
-      - name: Install 3DS tools
-        run: |
-          dkp-pacman -S --noconfirm 3dstools
-
-      - name: Build CIA
-        run: |
-          make clean
-          make
-
-      - name: Upload CIA
-        uses: actions/upload-artifact@v4
-        with:
+    - name: Checkout repo
+      uses: actions/checkout@v4		#Use Checkout Version 4
+    - name: Buid BannerTool		#In order to make a CIA file you need BannerTool and Makerom
+      continue-on-error: true		#For debbuging, can be removed
+      run: |
+        git clone https://github.com/carstene1ns/3ds-bannertool.git
+        cd 3ds-bannertool
+        cmake -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        cmake --build build
+        sudo cmake --install build
+    - name: Build Makerom		#In order to make a CIA file you need BannerTool and Makerom
+      continue-on-error: true		#For debbuging, can be removed
+      run: |
+        git clone --recursive https://github.com/3DSGuy/Project_CTR
+        cd Project_CTR/makerom
+        make deps
+        make
+        sudo cp ./bin/makerom /usr/local/bin/makerom	#The makerom executable should be
+        sudo chmod +x /usr/local/bin/makerom		#copied to bin folder and add exe attribute
+        cd ..
+        cd ..
+    - name: Build CIA			#Build the code
+      continue-on-error: true
+      run: | 
+        sudo dkp-pacman -S --noconfirm 3dstools		#if any other package is requiered can be installed
+        make cia
+    - name: Upload CIA
+      uses: actions/upload-artifact@v4	#Upload the artifacts using the 3dsx and the cia files
+      with:
           name: Brewtendo-CIA
-          path: "*.cia"
+          path: | 
+            *.cia
+            *.3dsx
